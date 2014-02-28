@@ -1,0 +1,25 @@
+#!/bin/bash
+
+set -o nounset -o pipefail -o errexit
+
+declare -r hostname="vm-126.idm.lab.eng.brq.redhat.com"
+declare -r url_fmt_fmt="http://$hostname:8080/job/%s_%s/buildWithParameters?token=token&delay=0sec&revision=%%s"
+declare -r -a branch_list=(master sssd-1-11)
+declare -r -a target_list=(fedora20 rhel7)
+
+git fetch -q
+
+declare branch
+declare -a url_fmt_list
+declare target
+declare url_fmt
+
+for branch in "${branch_list[@]}"; do
+    url_fmt_list=()
+    for target in "${target_list[@]}"; do
+        printf -v url_fmt "$url_fmt_fmt" "$branch" "$target"
+        url_fmt_list+=("$url_fmt")
+    done
+    sssd-ci-wget-new-revs "$branch" "${url_fmt_list[@]}"
+done
+

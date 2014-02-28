@@ -1,0 +1,38 @@
+#!/bin/bash
+
+set -o nounset -o pipefail -o errexit
+
+# Output usage information
+function usage()
+{
+cat <<EOF
+Usage: `basename "$0"` BRANCH [URL_FMT...]
+Update a local git repo branch, fetching a URL for every new commit.
+
+Argsuments:
+    BRANCH  Name of the branch to update from upstream.
+    URL_FMT URL printf format string accepting single string argument
+            - the revision.
+EOF
+}
+
+if (( $# < 1 )); then
+    echo "Invalid number of arguments" >&2
+    usage >&2
+    exit 1
+fi
+
+declare -r BRANCH="$1"; shift
+declare rev
+declare url_fmt
+declare url
+
+while read -r rev; do
+    for url_fmt in "$@"; do
+        printf -v url "$url_fmt" "$rev"
+        wget --quiet -O/dev/null -- "$url"
+    done
+    git update-ref "refs/heads/$BRANCH" "$rev"
+done < <(
+    git rev-list --reverse "^refs/heads/$BRANCH" "$BRANCH@{upstream}"
+)
