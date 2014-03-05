@@ -1,0 +1,43 @@
+#!/bin/bash
+
+set -o nounset -o pipefail -o errexit
+
+declare -r PROGNAME=`basename "$0"`
+
+# Output usage information.
+function usage()
+{
+	cat <<EOF
+Usage: $PROGNAME GIT_DIR
+Imitate git-receive-pack, pushing any new commits to CI servers.
+
+Arguments:
+    GIT_DIR     Git directory to imitate a push to.
+EOF
+}
+
+if [ "$#" != 1 ]; then
+    echo "$PROGNAME: Invalid number of arguments" >&2
+    usage >&2
+    exit 1
+fi
+
+declare git_dir
+git_dir=`readlink -f "$1"`
+declare tmp_git_dir
+tmp_git_dir=`mktemp --tmpdir --directory "$PROGNAME.XXXXXXXX"`
+trap 'rm -R "$tmp_git_dir"' EXIT
+
+git clone --quiet --bare "$git_dir" "$tmp_git_dir"
+
+printf '#!/bin/bash
+        exec sssd-ci-pre-receive %q "$@"' "$git_dir" > \
+            "$tmp_git_dir/hooks/pre-receive"
+chmod a+x "$tmp_git_dir/hooks/pre-receive"
+
+printf '#!/bin/bash
+        exec sssd-ci-post-receive %q "$@"' "$git_dir" > \
+            "$tmp_git_dir/hooks/post-receive"
+chmod a+x "$tmp_git_dir/hooks/post-receive"
+
+git receive-pack "$tmp_git_dir"

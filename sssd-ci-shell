@@ -1,0 +1,165 @@
+#!/bin/bash
+
+set -o nounset -o pipefail -o errexit
+
+declare -r PROGNAME=`basename "$0"`
+
+# Output usage information.
+function usage()
+{
+	cat <<EOF
+Usage: $PROGNAME -c COMMAND
+Imitate git-shell, falling through to sssd-ci-receive-pack.
+
+Arguments:
+    COMMAND Command to execute. One of:
+                git-receive-pack QUOTED_PATH
+                git-upload-pack QUOTED_PATH
+                git-upload-archive QUOTED_PATH
+            Only "git-receive-pack" is supported.
+EOF
+}
+
+# Output an error.
+# Args: [echo_arg...]
+function error()
+{
+    echo "$PROGNAME: $@" >&2
+}
+
+# Output an error followed by usage information.
+# Args: [echo_arg...]
+function usage_error()
+{
+    error "$@"
+    usage >&2
+}
+
+# Output an error and terminate.
+# Args: [echo_arg...]
+function die()
+{
+    error "$@"
+    exit 1
+}
+
+# Output a usage error and terminate.
+# Args: [echo_arg...]
+function usage_die()
+{
+    usage_error "$@"
+    exit 1
+}
+
+# Split a git-shell command line string into an array of unquoted "words".
+# Args: _arr_name _str
+function split_words()
+{
+	declare -r _arr_name="$1";  shift
+	declare -r _str="$1";       shift
+	declare -a _arr=()
+	declare _word
+	declare _quoted=false
+	declare _i
+	declare _c
+
+	for ((_i = 0; _i < ${#_str}; _i++)) do
+        _c="${_str:_i:1}"
+        if $_quoted; then
+        	if [ "$_c" == "'" ]; then
+                _quoted=false
+            else
+            	_word+="$_c"
+            fi
+        else
+            if [[ "$_c" =~ ^[[:space:]]$ ]]; then
+                if [ "${_word+set}" ]; then
+                    _arr+=("$_word")
+                    unset _word
+                fi
+            else
+            	if [ "$_c" == "'" ]; then
+            		_quoted=true
+                elif [ "$_c" == "\\" ]; then
+                    _i=$((_i + 1))
+                    if (( _i >= ${#_str} )); then
+                        die "Incomplete escape sequence: $_str"
+                    fi
+                    _c="${_str:_i:1}"
+                    if [ "$_c" == "'" ] || [ "$_c" == "!" ]; then
+                        _word+="$_c"
+                    else
+                        die "Invalid escape sequence: $_str"
+                    fi
+                else
+                    _word+="$_c"
+                fi
+            fi
+        fi
+    done
+    if $_quoted; then
+        die "Unterminated quoting: $_str"
+    fi
+    if [ "${_word+set}" ]; then
+        _arr+=("$_word")
+        unset _word
+    fi
+
+    eval "$_arr_name=(\"\${_arr[@]}\")"
+}
+
+#
+# Main routine
+#
+if [ "$#" == 0 ]; then
+	die "Interactive mode is not supported"
+fi
+
+if [ $# != 2 ]; then
+	usage_die "Invalid number of arguments"
+fi
+
+if [ "$1" != "-c" ]; then
+	usage_die "Invalid first argument: $1"
+fi
+
+declare cmd_line="$2"
+declare -a word_list=()
+declare word_num
+declare git_cmd
+declare git_dir
+
+split_words word_list "$cmd_line"
+word_num="${#word_list[@]}"
+
+if ((word_num == 0)); then
+    usage_die "Invalid command: $cmd_line"
+fi
+
+if [ "${word_list[0]}" == "git" ]; then
+    if ((word_num != 3)); then
+        usage_die "Invalid command: $cmd_line"
+    fi
+    git_cmd="${word_list[1]}"
+    git_dir="${word_list[2]}"
+elif [[ "${word_list[0]}" == git-* ]]; then
+    if ((word_num != 2)); then
+        usage_die "Invalid command: $cmd_line"
+    fi
+    git_cmd="${word_list[0]:4}"
+    git_dir="${word_list[1]}"
+else
+    usage_die "Invalid command: $cmd_line"
+fi
+
+case "$git_cmd" in
+    receive-pack)
+        exec sssd-ci-receive-pack "$git_dir"
+        ;;
+    upload-pack|upload-archive)
+        die "Pulling is not supported"
+        ;;
+    *)
+        die "Unknown git command: $git_cmd"
+        ;;
+esac

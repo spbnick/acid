@@ -1,0 +1,55 @@
+#!/bin/bash
+
+set -o nounset -o pipefail -o errexit
+
+declare -r PROGNAME=`basename "$0"`
+declare -r CONF_PFX="sssd-ci"
+
+# Output usage information.
+function usage()
+{
+	cat <<EOF
+Usage: $PROGNAME MASTER_GIT_DIR
+Verify references submitted to a git pre-receive hook are CI-applicable.
+
+Arguments:
+    MASTER_GIT_DIR  Git directory pushing to which is being imitated.
+EOF
+}
+
+if [ "$#" != 1 ]; then
+    echo "$PROGNAME: Invalid number of arguments" >&2
+    usage >&2
+    exit 1
+fi
+
+export GIT_DIR="$1"
+
+declare rev_old
+declare rev_new
+declare ref
+declare branch
+declare build_list
+
+while read -r rev_old rev_new ref; do
+    if ! [[ "$ref" =~ ^refs/heads/[^/]+$ ]]; then
+        echo "$PROGNAME: Pushing to a non-branch reference: $ref" >&2
+        exit 1
+    fi
+    branch="${ref#refs/heads/}"
+
+    if [[ "$rev_old" =~ ^0{40}$ ]]; then
+        echo "$PROGNAME: Creating a branch is not allowed: $branch" >&2
+        exit 1
+    fi
+    if [[ "$rev_new" =~ ^0{40}$ ]]; then
+        echo "$PROGNAME: Removing a branch is not allowed: $branch" >&2
+        exit 1
+    fi
+
+    build_list=`git config --get "branch.$branch.$CONF_PFX-build-list"` &&
+               [ -n "$build_list" ] || {
+        echo "$PROGNAME: Pushing to a branch without builds: $branch" >&2
+        exit 1
+    }
+done
