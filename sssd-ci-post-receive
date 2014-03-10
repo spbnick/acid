@@ -55,7 +55,7 @@ while read -r rev_old rev_new ref; do
     while read -r rev; do
         git push --quiet "$master_git_dir" "$rev:refs/private/$rev"
         for build in "${build_list[@]}"; do
-            printf -v url "$url_fmt" "$branch" "$build" "$rev"
+            printf -v url "$url_fmt" "$branch" "$build" "$rev" "$USER"
             wget --quiet -O/dev/null -- "$url" >&2
         done
     done < <(
