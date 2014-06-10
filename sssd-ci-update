@@ -1,4 +1,7 @@
 #!/bin/bash
+#
+# Update all local heads to match remote ones, triggering builds for every new
+# commit.
 
 set -o nounset -o pipefail -o errexit
 
@@ -11,8 +14,6 @@ url_fmt=`git config --get "$CONF_PFX.public-url-fmt"` &&
     echo "$PROGNAME: Public build trigger URL format is not set" >&2
     exit 1
 }
-
-git fetch -q
 
 declare ref
 declare branch
