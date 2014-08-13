@@ -9,7 +9,7 @@ function usage()
 {
 	cat <<EOF
 Usage: $PROGNAME -c COMMAND
-Imitate git-shell, falling through to sssd-ci-receive-pack.
+Imitate git-shell, falling through to acid-receive-pack.
 
 Arguments:
     COMMAND Command to execute. One of:
@@ -154,7 +154,7 @@ fi
 
 case "$git_cmd" in
     receive-pack)
-        exec sssd-ci-receive-pack "$git_dir"
+        exec acid-receive-pack "$git_dir"
         ;;
     upload-pack|upload-archive)
         die "Pulling is not supported"

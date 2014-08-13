@@ -6,7 +6,7 @@
 set -o nounset -o pipefail -o errexit
 
 declare -r PROGNAME=`basename "$0"`
-declare -r CONF_PFX="sssd-ci"
+declare -r CONF_PFX="acid"
 
 declare url_fmt
 url_fmt=`git config --get "$CONF_PFX.public-url-fmt"` &&

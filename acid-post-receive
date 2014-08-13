@@ -3,7 +3,7 @@
 set -o nounset -o pipefail -o errexit
 
 declare -r PROGNAME=`basename "$0"`
-declare -r CONF_PFX="sssd-ci"
+declare -r CONF_PFX="acid"
 
 # Output usage information.
 function usage()

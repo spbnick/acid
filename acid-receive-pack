@@ -31,12 +31,12 @@ trap 'rm -R "$tmp_git_dir"' EXIT
 git clone --quiet --bare "$git_dir" "$tmp_git_dir"
 
 printf '#!/bin/bash
-        exec sssd-ci-pre-receive %q "$@"' "$git_dir" > \
+        exec acid-pre-receive %q "$@"' "$git_dir" > \
             "$tmp_git_dir/hooks/pre-receive"
 chmod a+x "$tmp_git_dir/hooks/pre-receive"
 
 printf '#!/bin/bash
-        exec sssd-ci-post-receive %q "$@"' "$git_dir" > \
+        exec acid-post-receive %q "$@"' "$git_dir" > \
             "$tmp_git_dir/hooks/post-receive"
 chmod a+x "$tmp_git_dir/hooks/post-receive"
 
