@@ -19,6 +19,7 @@
 # Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 # Boston, MA 02110-1301, USA.
 
+. <(acid-env || echo exit 1)
 set -o nounset -o pipefail -o errexit
 
 declare -r PROGNAME=`basename "$0"`

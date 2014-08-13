@@ -1,3 +1,7 @@
+#!/bin/bash
+#
+# Output a Bash script setting installation-dependent environment variables
+# for ACID - another CI dispatcher
 #
 # Copyright (c) 2014 Red Hat, Inc. All rights reserved.
 #
@@ -15,14 +19,25 @@
 # Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 # Boston, MA 02110-1301, USA.
 
-dist_bin_SCRIPTS = \
-    acid-env \
-    acid-post-receive \
-    acid-pre-receive \
-    acid-receive-pack \
-    acid-shell \
-    acid-update
+cat <<"EOF"
+if [ -z "${_ACID_LIB_SH+set}" ]; then
+declare _ACID_LIB_SH=
 
-install-exec-hook:
-	$(SED) -e "s#\(ACID_LIB_PATH=\).*#\1\"$(pkgdatadir)\"#" \
-           -i "$(DESTDIR)$(bindir)/acid-env"
+declare -r ACID_LIB_PATH="../lib"  # Replaced on installation
+
+if [ "${ACID_LIB_PATH::1}" == "/" ]; then
+    ACID_LIB_DIR="$ACID_LIB_PATH"
+else
+EOF
+
+printf '    ACID_LIB_DIR=`readlink -f %q/"$ACID_LIB_PATH"`\n' \
+       "`dirname \"\$0\"`"
+
+cat <<"EOF"
+fi
+declare -r ACID_LIB_DIR
+
+PATH="$ACID_LIB_DIR:$PATH"
+
+fi #_ACID_LIB_SH
+EOF
