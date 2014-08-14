@@ -1,3 +1,7 @@
+#!/bin/bash
+#
+# Output a Bash script setting installation-dependent environment variables
+# and enabling Thud strict mode for ACID - another CI dispatcher
 #
 # Copyright (c) 2014 Red Hat, Inc. All rights reserved.
 #
@@ -15,15 +19,17 @@
 # Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 # Boston, MA 02110-1301, USA.
 
-dist_bin_SCRIPTS = \
-    acid-env \
-    acid-post-receive \
-    acid-pre-receive \
-    acid-receive-pack \
-    acid-shell \
-    acid-strict-env \
-    acid-update
+set -e
+acid-env
 
-install-exec-hook:
-	$(SED) -e "s#\(ACID_LIB_PATH=\).*#\1\"$(pkgdatadir)\"#" \
-           -i "$(DESTDIR)$(bindir)/acid-env"
+cat <<"EOF"
+
+if [ -z "${_ACID_STRICT_SH+set}" ]; then
+declare _ACID_STRICT_SH=
+
+set -e
+. thud_strict.sh
+thud_strict_on
+
+fi #_ACID_STRICT_SH
+EOF
