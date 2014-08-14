@@ -19,7 +19,11 @@
 # Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 # Boston, MA 02110-1301, USA.
 
+set -e
+thud-env
+
 cat <<"EOF"
+
 if [ -z "${_ACID_LIB_SH+set}" ]; then
 declare _ACID_LIB_SH=
 

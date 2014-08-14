@@ -9,6 +9,7 @@ Source:     %{name}-%{version}.tar.gz
 
 Requires:   git
 Requires:   bash
+Requires:   thud
 
 %description
 
