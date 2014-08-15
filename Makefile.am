@@ -15,7 +15,7 @@
 # Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 # Boston, MA 02110-1301, USA.
 
-SUBDIRS = src
+SUBDIRS = lib src
 
 dist_noinst_SCRIPTS = bootstrap
 

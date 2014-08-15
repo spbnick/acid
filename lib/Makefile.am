@@ -15,11 +15,6 @@
 # Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 # Boston, MA 02110-1301, USA.
 
-AC_PREREQ(2.60)
-AC_INIT([acid], [1])
-AM_INIT_AUTOMAKE([1.10 -Wall foreign])
-AC_PROG_INSTALL
-AC_PROG_SED
-
-AC_CONFIG_FILES([Makefile lib/Makefile src/Makefile])
-AC_OUTPUT
+dist_pkgdata_DATA = \
+    acid_set.sh     \
+    acid_tag.sh
