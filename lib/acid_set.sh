@@ -105,7 +105,11 @@ function acid_set_to_aarr()
     thud_assert 'thud_is_ass_arr "$_aarr_var"'
     thud_assert 'acid_set_is_valid "$_set"'
     IFS="$ACID_SET_IFS" read -r -d '' -a _iarr <<<"$_set"
-    printf -v _init_expr '[%q]=true ' "${_iarr[@]}"
+    if [[ ${#_iarr[@]} == 0 ]]; then
+        _init_expr=""
+    else
+        printf -v _init_expr '[%q]=true ' "${_iarr[@]}"
+    fi
     eval "$_aarr_var+=($_init_expr)"
 }
 
