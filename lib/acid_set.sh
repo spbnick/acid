@@ -91,7 +91,7 @@ function acid_set_to_iarr()
     declare -r _set="$1";       shift
     thud_assert 'thud_is_idx_arr "$_iarr_var"'
     thud_assert 'acid_set_is_valid "$_set"'
-    IFS="$ACID_SET_IFS" read -r -a "$_iarr_var" <<<"$_set"
+    IFS="$ACID_SET_IFS" read -r -d '' -a "$_iarr_var" <<<"$_set"
 }
 
 # Convert a set string to an associative array.
@@ -104,7 +104,7 @@ function acid_set_to_aarr()
     declare _init_expr
     thud_assert 'thud_is_ass_arr "$_aarr_var"'
     thud_assert 'acid_set_is_valid "$_set"'
-    IFS="$ACID_SET_IFS" read -r -a _iarr <<<"$_set"
+    IFS="$ACID_SET_IFS" read -r -d '' -a _iarr <<<"$_set"
     printf -v _init_expr '[%q]=true ' "${_iarr[@]}"
     eval "$_aarr_var+=($_init_expr)"
 }
