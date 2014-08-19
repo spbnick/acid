@@ -171,40 +171,6 @@ function acid_set_filter()
     acid_set_from_iarr iarr
 }
 
-# Check if all set's tags match a predicate.
-# Args: set p [p_arg...]
-function acid_set_are_all()
-{
-    declare -r set="$1";        shift
-    declare -a iarr=()
-    declare tag
-    thud_assert 'acid_set_is_valid "$set"'
-    acid_set_to_iarr iarr "$set"
-    for tag in "${iarr[@]}"; do
-        if ! "$@" "$tag"; then
-            return 1
-        fi
-    done
-    return 0
-}
-
-# Check if any of the set's tags match a predicate.
-# Args: set p [p_arg...]
-function acid_set_is_any()
-{
-    declare -r set="$1";        shift
-    declare -a iarr=()
-    declare tag
-    thud_assert 'acid_set_is_valid "$set"'
-    acid_set_to_iarr iarr "$set"
-    for tag in "${iarr[@]}"; do
-        if "$@" "$tag"; then
-            return 0
-        fi
-    done
-    return 1
-}
-
 # Check if an exact set is a subset of any other set.
 # Args: exact_set any_set
 function acid_set_is_subset()
