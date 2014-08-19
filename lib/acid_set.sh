@@ -127,6 +127,17 @@ function acid_set_from_aarr()
     IFS="$ACID_SET_IFS" eval "printf '%s' \"\${!$_aarr_var[*]}\""
 }
 
+# Output a set with any repeated tags removed.
+# Args: set
+function acid_set_uniq()
+{
+    declare -r set="$1"
+    declare -A aarr=()
+    thud_assert 'acid_set_is_valid "$set"'
+    acid_set_to_aarr aarr "$set"
+    acid_set_from_aarr aarr
+}
+
 # Output a set filtered by a tag predicate.
 # Args: set p [p_arg...]
 function acid_set_filter()
