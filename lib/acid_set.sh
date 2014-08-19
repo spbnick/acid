@@ -189,6 +189,30 @@ function acid_set_is_any()
     return 1
 }
 
+# Check if an exact set is a subset of any other set.
+# Args: exact_set any_set
+function acid_set_is_subset()
+{
+    declare -r exact_set="$1";  shift
+    declare -r any_set="$1";    shift
+    declare -a exact_iarr=()
+    declare -a any_iarr=()
+    declare exact_tag
+    declare any_tag
+    thud_assert 'acid_set_is_exact "$exact_set"'
+    thud_assert 'acid_set_is_valid "$any_set"'
+    acid_set_to_iarr exact_iarr "$exact_set"
+    acid_set_to_iarr any_iarr "$any_set"
+    for exact_tag in "${!exact_iarr[@]}"; do
+        for any_tag in "${!any_iarr[@]}"; do
+            if [[ $exact_tag != $any_tag ]]; then
+                return 1
+            fi
+        done
+    done
+    return 0
+}
+
 # Output a union of an exact and any other set (exact U any).
 # Args: exact_set any_set
 function acid_set_union()
