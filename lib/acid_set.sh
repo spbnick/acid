@@ -189,28 +189,6 @@ function acid_set_is_any()
     return 1
 }
 
-# Check if an exact set has a tag matching any other tag.
-# Args: exact_set any_tag
-function acid_set_has_any()
-{
-    declare -r exact_set="$1";  shift
-    declare -r any_tag="$1";    shift
-    thud_assert 'acid_set_is_exact "$exact_set"'
-    thud_assert 'acid_tag_is_valid "$any_tag"'
-    acid_set_is_any "$exact_set" acid_tag_match_exact "$any_tag"
-}
-
-# Check if any set has a tag matching an exact tag.
-# Args: any_set exact_tag
-function acid_set_has_exact()
-{
-    declare -r any_set="$1";    shift
-    declare -r exact_tag="$1";  shift
-    thud_assert 'acid_set_is_valid "$any_set"'
-    thud_assert 'acid_tag_is_exact "$exact_tag"'
-    acid_set_is_any "$any_set" acid_tag_match_any "$exact_tag"
-}
-
 # Output a union of an exact and any other set (exact U any).
 # Args: exact_set any_set
 function acid_set_union()
