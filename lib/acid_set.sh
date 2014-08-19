@@ -71,7 +71,7 @@ function acid_set_is_empty()
     declare -r set="$1"
     thud_assert 'acid_set_is_valid "$set"'
     # Set is empty if there are no non-separator characters
-    [[ "$set" != *[^$ACID_SET_IFS]* ]]
+    [[ $set != *[^$ACID_SET_IFS]* ]]
 }
 
 # Convert a set string to an indexed array.
