@@ -25,5 +25,6 @@ make install DESTDIR=%{buildroot}
 
 %files
 %{_bindir}/acid-*
+%{_datadir}/%{name}
 
 %changelog
