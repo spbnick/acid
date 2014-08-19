@@ -94,17 +94,21 @@ function acid_set_to_iarr()
     IFS="$ACID_SET_IFS" read -r -d '' -a "$_iarr_var" <<<"$_set"
 }
 
-# Convert a set string to an associative array.
+# Convert a set string to an associative array, with tags having '*' and '@'
+# doubled and used as keys.
 # Args: _aarr_var _set
 function acid_set_to_aarr()
 {
     declare -r _aarr_var="$1";  shift
     declare -r _set="$1";       shift
     declare -a _iarr=()
+    declare _esc_set
     declare _init_expr
     thud_assert 'thud_is_ass_arr "$_aarr_var"'
     thud_assert 'acid_set_is_valid "$_set"'
-    IFS="$ACID_SET_IFS" read -r -d '' -a _iarr <<<"$_set"
+    _esc_set=${_set//\*/**}
+    _esc_set=${_esc_set//@/@@}
+    IFS="$ACID_SET_IFS" read -r -d '' -a _iarr <<<"$_esc_set"
     if [[ ${#_iarr[@]} == 0 ]]; then
         _init_expr=""
     else
@@ -124,13 +128,19 @@ function acid_set_from_iarr()
     "
 }
 
-# Convert an associative array to a set string.
+# Convert an associative array to a set string, considering keys being tags
+# with '*' and '@' doubled.
 # Args: _aarr_var
 function acid_set_from_aarr()
 {
     declare -r _aarr_var="$1";  shift
+    declare _esc_set
+    declare _set
     thud_assert 'thud_is_ass_arr "$_aarr_var"'
-    IFS="$ACID_SET_IFS" eval "printf '%s' \"\${!$_aarr_var[*]}\""
+    IFS="$ACID_SET_IFS" eval "_esc_set=\"\${!$_aarr_var[*]}\""
+    _esc_set=${_esc_set//\*\*/*}
+    _set=${_esc_set//@@/@}
+    printf '%s' "$_set"
 }
 
 # Output a set with any repeated tags removed.
@@ -149,16 +159,16 @@ function acid_set_uniq()
 function acid_set_filter()
 {
     declare -r set="$1";        shift
-    declare -A aarr=()
+    declare -a iarr=()
     declare sep=''
     declare tag
-    acid_set_to_aarr aarr "$set"
-    for tag in "${!aarr[@]}"; do
+    acid_set_to_iarr iarr "$set"
+    for tag in "${iarr[@]}"; do
         if ! "$@" "$tag"; then
-            unset aarr[$tag]
+            unset iarr[$tag]
         fi
     done
-    acid_set_from_aarr aarr
+    acid_set_from_iarr iarr
 }
 
 # Check if all set's tags match a predicate.
@@ -166,11 +176,11 @@ function acid_set_filter()
 function acid_set_are_all()
 {
     declare -r set="$1";        shift
-    declare -A aarr=()
+    declare -a iarr=()
     declare tag
     thud_assert 'acid_set_is_valid "$set"'
-    acid_set_to_aarr aarr "$set"
-    for tag in "${!aarr[@]}"; do
+    acid_set_to_iarr iarr "$set"
+    for tag in "${iarr[@]}"; do
         if ! "$@" "$tag"; then
             return 1
         fi
@@ -183,11 +193,11 @@ function acid_set_are_all()
 function acid_set_is_any()
 {
     declare -r set="$1";        shift
-    declare -A aarr=()
+    declare -a iarr=()
     declare tag
     thud_assert 'acid_set_is_valid "$set"'
-    acid_set_to_aarr aarr "$set"
-    for tag in "${!aarr[@]}"; do
+    acid_set_to_iarr iarr "$set"
+    for tag in "${iarr[@]}"; do
         if "$@" "$tag"; then
             return 0
         fi
@@ -242,13 +252,15 @@ function acid_set_comp()
     declare -A exact_aarr=()
     declare -A any_aarr=()
     declare exact_tag
+    declare any_key
     declare any_tag
     thud_assert 'acid_set_is_exact "$exact_set"'
     thud_assert 'acid_set_is_valid "$any_set"'
     acid_set_to_aarr exact_aarr "$exact_set"
     acid_set_to_aarr any_aarr "$any_set"
     for exact_tag in "${!exact_aarr[@]}"; do
-        for any_tag in "${!any_aarr[@]}"; do
+        for any_key in "${!any_aarr[@]}"; do
+            acid_tag_from_key any_tag any_key
             if [[ $exact_tag == $any_tag ]]; then
                 unset exact_aarr[$exact_tag]
                 break

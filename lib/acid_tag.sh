@@ -91,4 +91,29 @@ function acid_tag_match_exact()
     acid_tag_match_any "$2" "$1"
 }
 
+# Convert a tag to an associative array key, by doubling '@' and '*', as they
+# cannot be used alone in regular keys.
+# Args: _key_var _tag_var
+function acid_tag_to_key()
+{
+    declare -r _key_var="$1";   shift
+    declare -r _tag_var="$1";   shift
+    eval "
+        $_key_var=\${$_tag_var//\\*/**}
+        $_key_var=\${$_key_var//@/@@}
+    "
+}
+
+# Convert an associative array key to a tag, removing '@' and '*' duplication.
+# Args: _tag_var _key_var
+function acid_tag_from_key()
+{
+    declare -r _tag_var="$1";   shift
+    declare -r _key_var="$1";   shift
+    eval "
+        $_tag_var=\${$_key_var//\\*\\*/*}
+        $_tag_var=\${$_tag_var//@@/@}
+    "
+}
+
 fi # _ACID_TAG_SH
