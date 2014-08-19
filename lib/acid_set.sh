@@ -119,7 +119,9 @@ function acid_set_from_iarr()
 {
     declare -r _iarr_var="$1";  shift
     thud_assert 'thud_is_idx_arr "$_iarr_var"'
-    IFS="$ACID_SET_IFS" eval "printf '%s' \"\${$_iarr_var[*]}\""
+    IFS="$ACID_SET_IFS" eval "
+        [[ \${#$_iarr_var[@]} != 0 ]] && printf '%s' \"\${$_iarr_var[*]}\"
+    "
 }
 
 # Convert an associative array to a set string.
