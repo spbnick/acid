@@ -19,8 +19,10 @@
 
 #
 # A set is a whitespace-separated list of elements (tags).
-# There are two kinds of sets: exact sets and glob sets. Exact sets can only
-# contain exact tags. Glob sets can also contain glob tags. See acid_tag.sh.
+# There are two main kinds of sets: exact sets and glob sets. Exact sets can
+# only contain exact tags. Glob sets can also contain glob tags. A prefix
+# (pfx) set is a glob set, where each tag is an exact tag with '*' appended.
+# See acid_tag.sh.
 #
 
 if [ -z "${_ACID_SET_SH+set}" ]; then
@@ -51,6 +53,15 @@ function acid_set_is_exact()
 function acid_set_is_glob()
 {
     [[ $1 != *[^$ACID_SET_CS]* && $1 == *[$ACID_TAG_CS_GLOB]* ]]
+}
+
+# Check if a string is a prefix glob set.
+# Args: set
+function acid_set_is_pfx()
+{
+    declare -r spc="[$ACID_SET_IFS]"
+    declare -r tag="[$ACID_TAG_CS_EXACT]+\\*"
+    [[ $1 =~ ^$spc*($tag($spc+$tag)*)?$spc*$ ]]
 }
 
 # Check if a set is empty.
@@ -229,6 +240,33 @@ function acid_set_comp()
         done
     done
     acid_set_from_aarr exact_aarr
+}
+
+# Convert an exact set to a prefix glob set.
+# Args: exact_set
+# Output: prefix glob set
+function acid_set_to_pfx()
+{
+    declare -r exact_set="$1";  shift
+    declare -a exact_iarr=()
+    declare -a pfx_iarr=()
+    declare tag
+    thud_assert 'acid_set_is_exact "$exact_set"'
+    acid_set_to_iarr exact_iarr "$exact_set"
+    for tag in "${exact_iarr[@]}"; do
+        pfx_iarr+=("$tag*")
+    done
+    acid_set_from_iarr pfx_iarr
+}
+
+# Convert a prefix glob set to an exact set.
+# Args: pfx_set
+# Output: exact set
+function acid_set_from_pfx()
+{
+    declare -r pfx_set="$1";  shift
+    thud_assert 'acid_set_is_pfx "$pfx_set"'
+    printf '%s' "${pfx_set//\*}"
 }
 
 fi # _ACID_SET_SH

@@ -46,6 +46,33 @@ function acid_tag_is_glob()
        "$1" =~ [$ACID_TAG_CS_GLOB] ]]
 }
 
+# Check if a string is a prefix tag.
+# Args: str
+function acid_tag_is_pfx()
+{
+    [[ "$1" =~ ^[$ACID_TAG_CS_EXACT]+\*$ ]]
+}
+
+# Convert an exact tag to a prefix tag.
+# Args: exact_tag
+# Output: pfx_tag
+function acid_tag_to_pfx()
+{
+    declare -r exact_tag="$1"
+    thud_assert 'acid_tag_is_exact "$exact_tag"'
+    printf '%s*' "$exact_tag"
+}
+
+# Convert a prefix tag to an exact tag.
+# Args: pfx_tag
+# Output: exact_tag
+function acid_tag_from_pfx()
+{
+    declare -r pfx_tag="$1"
+    thud_assert 'acid_tag_is_pfx "$pfx_tag"'
+    printf '%s' "${pfx_tag:0:${#pfx_tag}-1}"
+}
+
 # Check if an exact and any other tag match.
 # Args: exact_tag any_tag
 function acid_tag_match_any()
