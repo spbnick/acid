@@ -1,4 +1,6 @@
 #
+# ACID - miscellaneous functions
+#
 # Copyright (c) 2014 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing
@@ -15,11 +17,26 @@
 # Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 # Boston, MA 02110-1301, USA.
 
-dist_pkgdata_DATA = \
-    acid_branch.sh  \
-    acid_git.sh     \
-    acid_misc.sh    \
-    acid_repo.sh    \
-    acid_set.sh     \
-    acid_tag.sh     \
-    acid_var.sh
+if [ -z "${_ACID_MISC_SH+set}" ]; then
+declare -r _ACID_MISC_SH=
+
+# Escape a string to use literally in a regular expression.
+# Args: str
+function acid_regexp_escape()
+{
+    declare -r str="$1";    shift
+    declare esc=""
+    declare i
+    declare c
+    for ((i=0; i < ${#str}; i++)); do
+        c=${str:i:1}
+        if [[ $c == [A-Za-z0-9_-] ]]; then
+            esc+="$c"
+        else
+            esc+="\\$c"
+        fi
+    done
+    printf "%s" "$esc"
+}
+
+fi # _ACID_MISC_SH
