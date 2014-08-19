@@ -219,29 +219,17 @@ function acid_set_is_subset()
     return 0
 }
 
-# Output a union of an exact and any other set (exact U any).
-# Args: exact_set any_set
+# Output a union of two exact sets
+# Args: set_a set_b
 function acid_set_union()
 {
-    declare -r exact_set="$1";  shift
-    declare -r any_set="$1";    shift
-    declare -A exact_aarr=()
-    declare -A any_aarr=()
+    declare -r set_a="$1";  shift
+    declare -r set_b="$1";  shift
     declare -A union_aarr=()
-    declare exact_tag
-    declare any_tag
-    thud_assert 'acid_set_is_exact "$exact_set"'
-    thud_assert 'acid_set_is_valid "$any_set"'
-    acid_set_to_aarr exact_aarr "$exact_set"
-    acid_set_to_aarr any_aarr "$any_set"
-    for exact_tag in "${!exact_aarr[@]}"; do
-        for any_tag in "${!any_aarr[@]}"; do
-            if [[ $exact_tag == $any_tag ]]; then
-                union_aarr[$exact_tag]=true
-                break
-            fi
-        done
-    done
+    thud_assert 'acid_set_is_exact "$set_a"'
+    thud_assert 'acid_set_is_exact "$set_b"'
+    acid_set_to_aarr union_aarr "$set_a"
+    acid_set_to_aarr union_aarr "$set_b"
     acid_set_from_aarr union_aarr
 }
 
