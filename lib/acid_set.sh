@@ -322,6 +322,63 @@ function acid_set_intersects()
     return 1
 }
 
+# Output a set containing tags of any set matching at least one tag in an
+# exact set.
+# Args: any_set exact_set
+function acid_set_hit()
+{
+    declare -r any_set="$1";    shift
+    declare -r exact_set="$1";  shift
+    declare -A any_aarr=()
+    declare -A exact_aarr=()
+    declare -a hit_iarr=()
+    declare any_tag
+    declare any_key
+    declare exact_tag
+    thud_assert 'acid_set_is_valid "$any_set"'
+    thud_assert 'acid_set_is_exact "$exact_set"'
+    acid_set_to_aarr any_aarr "$any_set"
+    acid_set_to_aarr exact_aarr "$exact_set"
+    for any_key in "${!any_aarr[@]}"; do
+        acid_tag_from_key any_tag any_key
+        for exact_tag in "${!exact_aarr[@]}"; do
+            if [[ $exact_tag == $any_tag ]]; then
+                hit_iarr+=("$any_tag")
+                break
+            fi
+        done
+    done
+    acid_set_from_iarr hit_iarr
+}
+
+# Output a set containing tags of any set *not* matching any of the tags in an
+# exact set.
+# Args: any_set exact_set
+function acid_set_miss()
+{
+    declare -r any_set="$1";    shift
+    declare -r exact_set="$1";  shift
+    declare -A any_aarr=()
+    declare -A exact_aarr=()
+    declare any_tag
+    declare any_key
+    declare exact_tag
+    thud_assert 'acid_set_is_valid "$any_set"'
+    thud_assert 'acid_set_is_exact "$exact_set"'
+    acid_set_to_aarr any_aarr "$any_set"
+    acid_set_to_aarr exact_aarr "$exact_set"
+    for any_key in "${!any_aarr[@]}"; do
+        acid_tag_from_key any_tag any_key
+        for exact_tag in "${!exact_aarr[@]}"; do
+            if [[ $exact_tag == $any_tag ]]; then
+                unset any_aarr[$any_key]
+                break
+            fi
+        done
+    done
+    acid_set_from_aarr any_aarr
+}
+
 # Convert an exact set to a prefix glob set.
 # Args: exact_set
 # Output: prefix glob set
