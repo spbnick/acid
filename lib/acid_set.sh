@@ -74,6 +74,15 @@ function acid_set_is_empty()
     [[ $set != *[^$ACID_SET_IFS]* ]]
 }
 
+# Check if a set consits of one element.
+# Args: set
+function acid_set_is_singleton()
+{
+    declare -r set="$1"
+    thud_assert 'acid_set_is_valid "$set"'
+    [[ $set =~ ^[$ACID_SET_IFS]*[^$ACID_SET_IFS]+[$ACID_SET_IFS]*$ ]]
+}
+
 # Convert a set string to an indexed array.
 # Args: _iarr_var _set
 function acid_set_to_iarr()
