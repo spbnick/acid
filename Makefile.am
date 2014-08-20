@@ -20,3 +20,5 @@ SUBDIRS = lib src
 dist_noinst_SCRIPTS = bootstrap
 
 dist_noinst_DATA = acid.spec
+
+dist_doc_DATA = README.md
