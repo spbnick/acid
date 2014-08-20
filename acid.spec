@@ -24,6 +24,7 @@ make %{?_smp_mflags}
 make install DESTDIR=%{buildroot}
 
 %files
+%doc %{_datadir}/doc/%{name}/README.md
 %{_bindir}/acid-*
 %{_datadir}/%{name}
 
