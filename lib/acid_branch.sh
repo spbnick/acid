@@ -45,14 +45,16 @@ function acid_branch_load()
 
     branch[name]="$name"
     branch[enabled]=`acid_git_conf_get_bool "$git_str" enabled || echo false`
-    branch[pre_mask]=`acid_git_conf_get_all "$git_str" pre-mask || true`
-    branch[pre_mask]=`acid_set_uniq "${branch[pre_mask]}"`
+    branch[pre_selected]=`acid_git_conf_get_all "$git_str" pre-selected ||
+                            true`
+    branch[pre_selected]=`acid_set_uniq "${branch[pre_selected]}"`
     branch[pre_defaults]=`
         acid_git_conf_get_all "$git_str" pre-defaults || true
     `
     branch[pre_defaults]=`acid_set_uniq "${branch[pre_defaults]}"`
-    branch[post_mask]=`acid_git_conf_get_all "$git_str" post-mask || true`
-    branch[post_mask]=`acid_set_uniq "${branch[post_mask]}"`
+    branch[post_selected]=`acid_git_conf_get_all "$git_str" post-selected ||
+                            true`
+    branch[post_selected]=`acid_set_uniq "${branch[post_selected]}"`
 
     thud_arr_print branch
 }

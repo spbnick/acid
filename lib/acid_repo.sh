@@ -111,13 +111,13 @@ function acid_repo_load()
         "${branch[enabled]}" || continue
 
         # Check that each mask tag matches at least one supported tag
-        set=`acid_set_miss "${branch[pre_mask]}" "${repo[set]}"`
+        set=`acid_set_miss "${branch[pre_selected]}" "${repo[set]}"`
         if ! acid_set_is_empty "$set"; then
             echo "Branch \"$branch_name\" selects unknown" \
                  "pre-commit tags: $set" >&2
             return 1
         fi
-        set=`acid_set_miss "${branch[post_mask]}" "${repo[set]}"`
+        set=`acid_set_miss "${branch[post_selected]}" "${repo[set]}"`
         if ! acid_set_is_empty "$set"; then
             echo "Branch \"$branch_name\" selects unknown" \
                  "post-commit tags: $set" >&2
@@ -142,7 +142,8 @@ function acid_repo_load()
             #
 
             # Produce selected set
-            var_selected=`acid_set_intersect "${var[set]}" "${branch[pre_mask]}"`
+            var_selected=`acid_set_intersect "${var[set]}" \
+                                             "${branch[pre_selected]}"`
             if acid_set_is_empty "$var_selected"; then
                 echo "Branch \"$branch_name\" doesn't select" \
                      "any pre-commit \"$var_name\" tags" >&2
@@ -159,7 +160,8 @@ function acid_repo_load()
             fi
 
             # Produce default set
-            var_defaults=`acid_set_intersect "$var_selected" "${branch[pre_defaults]}"`
+            var_defaults=`acid_set_intersect "$var_selected" \
+                                             "${branch[pre_defaults]}"`
             if acid_set_is_empty "$var_defaults"; then
                 echo "Branch \"$branch_name\" pre-commit defaults" \
                      "don't match any selected \"$var_name\" tags" >&2
@@ -179,7 +181,8 @@ function acid_repo_load()
             #
 
             # Produce selected set
-            var_selected=`acid_set_intersect "${var[set]}" "${branch[post_mask]}"`
+            var_selected=`acid_set_intersect "${var[set]}" \
+                                             "${branch[post_selected]}"`
             if acid_set_is_empty "$var_selected"; then
                 echo "Branch \"$branch_name\" doesn't select" \
                      "any post-commit \"$var_name\" tags" >&2
@@ -270,7 +273,8 @@ function acid_repo_ref_update()
     fi
 
     thud_arr_parse branch <<<"$branch_str"
-    branch_selected=`acid_set_intersect "${repo[set]}" "${branch[pre_mask]}"`
+    branch_selected=`acid_set_intersect "${repo[set]}" \
+                                        "${branch[pre_selected]}"`
 
     #
     # Retrieve and validate tags
