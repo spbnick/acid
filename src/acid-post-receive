@@ -17,9 +17,9 @@
 # Boston, MA 02110-1301, USA.
 
 . <(acid-strict-env || echo exit 1)
+. acid_repo.sh
 
 declare -r PROGNAME=`basename "$0"`
-declare -r CONF_PFX="acid"
 
 # Output usage information.
 function usage()
@@ -39,42 +39,20 @@ if [ "$#" != 1 ]; then
     exit 1
 fi
 
-declare master_git_dir="$1"
+declare master_git_dir
+master_git_dir=`readlink -f "$1"`
 
-declare url_fmt
-url_fmt=`GIT_DIR="$master_git_dir" git config --get "$CONF_PFX.private-url-fmt"` &&
-        [ -n "$url_fmt" ] || {
-    echo "$PROGNAME: Build trigger URL format is not set" >&2
+# Check master git dir is a repository
+git rev-parse --resolve-git-dir "$master_git_dir" >/dev/null
+
+# Load repository
+declare repo_str
+repo_str=`acid_repo_load "$master_git_dir"` || {
+    echo "Failed to load repository configuration" >&2
     exit 1
 }
 
-declare rev_old
-declare rev_new
-declare ref
-declare branch
-declare -a build_list
-declare build
-declare rev
-declare url
-
+# Handle reference updates
 while read -r rev_old rev_new ref; do
-    if ! [[ "$ref" =~ ^refs/heads/[^/]+$ ]]; then
-        echo "$PROGNAME: Pushing to a non-branch reference: $ref" >&2
-        exit 1
-    fi
-    branch="${ref#refs/heads/}"
-    read -r -a build_list < <(
-        GIT_DIR="$master_git_dir" \
-            git config --get "branch.$branch.$CONF_PFX-build-list"
-    )
-
-    while read -r rev; do
-        git push --quiet "$master_git_dir" "$rev:refs/private/$rev"
-        for build in "${build_list[@]}"; do
-            printf -v url "$url_fmt" "$branch" "$build" "$rev" "$USER"
-            wget --quiet -O/dev/null -- "$url" >&2
-        done
-    done < <(
-        git rev-list --reverse "^$rev_old" "$rev_new"
-    )
+    acid_repo_ref_update "$repo_str" true "$rev_old" "$rev_new" "$ref"
 done

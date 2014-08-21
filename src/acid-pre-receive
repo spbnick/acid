@@ -17,9 +17,9 @@
 # Boston, MA 02110-1301, USA.
 
 . <(acid-strict-env || echo exit 1)
+. acid_repo.sh
 
 declare -r PROGNAME=`basename "$0"`
-declare -r CONF_PFX="acid"
 
 # Output usage information.
 function usage()
@@ -39,33 +39,20 @@ if [ "$#" != 1 ]; then
     exit 1
 fi
 
-export GIT_DIR="$1"
+declare master_git_dir
+master_git_dir=`readlink -f "$1"`
 
-declare rev_old
-declare rev_new
-declare ref
-declare branch
-declare build_list
+# Check master git dir is a repository
+git rev-parse --resolve-git-dir "$master_git_dir" >/dev/null
 
+# Load repository
+declare repo_str
+repo_str=`acid_repo_load "$master_git_dir"` || {
+    echo "Failed to load repository configuration" >&2
+    exit 1
+}
+
+# Check reference updates
 while read -r rev_old rev_new ref; do
-    if ! [[ "$ref" =~ ^refs/heads/[^/]+$ ]]; then
-        echo "$PROGNAME: Pushing to a non-branch reference: $ref" >&2
-        exit 1
-    fi
-    branch="${ref#refs/heads/}"
-
-    if [[ "$rev_old" =~ ^0{40}$ ]]; then
-        echo "$PROGNAME: Creating a branch is not allowed: $branch" >&2
-        exit 1
-    fi
-    if [[ "$rev_new" =~ ^0{40}$ ]]; then
-        echo "$PROGNAME: Removing a branch is not allowed: $branch" >&2
-        exit 1
-    fi
-
-    build_list=`git config --get "branch.$branch.$CONF_PFX-build-list"` &&
-               [ -n "$build_list" ] || {
-        echo "$PROGNAME: Pushing to a branch without builds: $branch" >&2
-        exit 1
-    }
+    acid_repo_ref_update "$repo_str" false "$rev_old" "$rev_new" "$ref"
 done

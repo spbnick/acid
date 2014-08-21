@@ -20,42 +20,15 @@
 # Boston, MA 02110-1301, USA.
 
 . <(acid-strict-env || echo exit 1)
+. acid_repo.sh
 
 declare -r PROGNAME=`basename "$0"`
-declare -r CONF_PFX="acid"
-
-declare url_fmt
-url_fmt=`git config --get "$CONF_PFX.public-url-fmt"` &&
-        [ -n "$url_fmt" ] || {
-    echo "$PROGNAME: Public build trigger URL format is not set" >&2
+declare git_dir=${1-${GIT_DIR-.}}
+git_dir=`readlink -f "$git_dir"`
+GIT_DIR="$git_dir" git rev-parse --git-dir >/dev/null
+declare repo_str
+repo_str=`acid_repo_load "$git_dir"` || {
+    echo "Failed to load repository configuration" >&2
     exit 1
 }
-
-declare ref
-declare branch
-declare -a build_list
-declare rev
-declare build
-declare url
-
-while read -r ref; do
-    branch="${ref#refs/heads/}"
-    read -r -a build_list < <(
-        git config --get "branch.$branch.$CONF_PFX-build-list"
-    ) || true
-    if [ "${#build_list[@]}" == 0 ]; then
-        git update-ref "$ref" "$branch@{upstream}" >&2
-    else
-        while read -r rev; do
-            for build in "${build_list[@]}"; do
-                printf -v url "$url_fmt" "$branch" "$build" "$rev"
-                wget --quiet -O/dev/null -- "$url" >&2
-            done
-            git update-ref "$ref" "$rev" >&2
-        done < <(
-            git rev-list --reverse "^$ref" "$branch@{upstream}"
-        )
-    fi
-done < <(
-    git for-each-ref --format='%(refname)' refs/heads
-)
+acid_repo_branch_update_all "$repo_str"

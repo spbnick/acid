@@ -25,7 +25,7 @@ function usage()
 {
 	cat <<EOF
 Usage: $PROGNAME GIT_DIR
-Imitate git-receive-pack, pushing any new commits to CI servers.
+Imitate git-receive-pack, triggering builds for any new commits.
 
 Arguments:
     GIT_DIR     Git directory to imitate a push to.
