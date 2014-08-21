@@ -253,10 +253,10 @@ function acid_repo_ref_update()
         echo "Invalid destination: $ref_dest_raw"
         return 1
     }
-    if [[ $ref_dest =~ ^refs/for/([^/]+)$ ]]; then
+    if [[ $ref_dest =~ ^refs/heads/([^/]+)$ ]]; then
         ref_branch=${BASH_REMATCH[1]}
     else
-        echo "Destination doesn't begin with \"refs/for/\": $ref_dest"
+        echo "Pushing to a non-branch reference: $ref_dest"
         return 1
     fi
 
