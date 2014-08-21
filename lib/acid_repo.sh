@@ -216,7 +216,7 @@ function acid_repo_ref_update()
 {
     eval "$ACID_REPO_SHIFT"
     declare -r act="$1";        shift
-    declare -r rev_old="$1";    shift
+    declare rev_old="$1";       shift
     declare -r rev_new="$1";    shift
     declare -r ref="$1";        shift
     declare ref_dest_raw
@@ -270,6 +270,10 @@ function acid_repo_ref_update()
     if [[ -z "$branch_str" ]]; then
         echo "Destination branch is not configured for CI: $ref_branch"
         return 1
+    fi
+
+    if [[ "$rev_old" =~ ^0{40}$ ]]; then
+        rev_old="$ref_dest"
     fi
 
     thud_arr_parse branch <<<"$branch_str"
