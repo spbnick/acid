@@ -20,8 +20,11 @@
 if [ -z "${_ACID_TAG_SH+set}" ]; then
 declare -r _ACID_TAG_SH=
 
-declare -r ACID_TAG_CS_EXACT='A-Za-z0-9_:-' # Must match >= 64 characters
+# Exact tag character set. Must match >= 64 shell-word characters.
+declare -r ACID_TAG_CS_EXACT='A-Za-z0-9_:-'
+# Glob tag-only character set.
 declare -r ACID_TAG_CS_GLOB='][^.=*?+@!()|'
+# Any tag character set.
 declare -r ACID_TAG_CS="$ACID_TAG_CS_GLOB$ACID_TAG_CS_EXACT"
 
 # Check if a string is a valid tag.
