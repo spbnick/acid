@@ -249,8 +249,7 @@ function acid_repo_ref_update()
     # Retrieve and validate destination
     #
     ref_dest_raw=${ref%%,*}
-    ref_dest=`GIT_DIR="${repo[git_dir]}" \
-                    git check-ref-format --normalize "$ref_dest_raw"` || {
+    ref_dest=`git check-ref-format --normalize "$ref_dest_raw"` || {
         echo "Invalid destination: $ref_dest_raw"
         return 1
     }
