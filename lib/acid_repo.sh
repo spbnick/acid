@@ -396,4 +396,65 @@ function acid_repo_ref_update()
     )
 }
 
+# Update all local branches with CI enabled to match upstream branches,
+# triggering a build for every new commit.
+# Args: repo_str
+function acid_repo_branch_update_all()
+{
+    eval "$ACID_REPO_SHIFT";
+    declare -A branch_map=()
+    declare -A branch
+    declare branch_name
+    declare ref
+    declare -A var_map=()
+    declare var_name
+    declare -A var
+    declare -A val_map
+    declare selected
+    declare each
+    thud_arr_parse branch_map <<<"${repo[branch_map]}"
+    thud_arr_parse var_map <<<"${repo[var_map]}"
+    # For each branch with CI enabled
+    for branch_name in "${!branch_map[@]}"; do
+        ref="refs/heads/$branch_name"
+        thud_arr_parse branch <<<"${branch_map[$branch_name]}"
+        selected=${branch[post_selected]}
+
+        #
+        # Generate variable value map and determine scope
+        #
+        each=
+        val_map=()
+        for var_name in "${!var_map[@]}"; do
+            var=()
+            thud_arr_parse var <<<"${var_map[$var_name]}"
+            val_map[$var_name]=`acid_set_intersect "${var[set]}" "$selected"`
+            if acid_var_is_scope "${var_map[$var_name]}"; then
+                if acid_set_intersects "${var[each]}" "$selected"; then
+                    each=true
+                else
+                    each=false
+                fi
+            fi
+        done
+        val_map_str=`thud_arr_print val_map`
+
+        #
+        # Run the script
+        #
+        while read -r rev; do
+            acid_repo_run "$repo_str" "post" "$branch_name" \
+                          "$val_map_str" "$rev"
+            GIT_DIR="${repo[git_dir]}" git update-ref "$ref" "$rev" >&2
+        done < <(
+            export GIT_DIR="${repo[git_dir]}"
+            if "$each"; then
+                git rev-list --reverse "^$ref" "$branch_name@{upstream}"
+            else
+                git rev-list -n1 "^$ref" "$branch_name@{upstream}"
+            fi
+        )
+    done
+}
+
 fi # _ACID_REPO_SH
