@@ -209,7 +209,9 @@ function acid_repo_load()
     thud_arr_print repo
 }
 
-# (Attempt to) handle a reference update.
+# (Attempt to) handle a reference update, triggering a build for each new
+# commit. GIT_DIR or current directory should be the repository receiving the
+# reference update.
 # Args: repo_str act rev_old rev_new ref
 function acid_repo_ref_update()
 {
