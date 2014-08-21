@@ -209,6 +209,38 @@ function acid_repo_load()
     thud_arr_print repo
 }
 
+# Execute either pre- or post-commit build trigger script for the specified
+# branch name, variable value map and commit hash.
+# Args: repo_str script_type branch_name val_map_str commit_hash
+function acid_repo_run()
+{
+    eval "$ACID_REPO_SHIFT"
+    declare -r script_type="$1";    shift
+    declare -r branch_name="$1";    shift
+    declare -r val_map_str="$1";    shift
+    declare -r commit_hash="$1";    shift
+    declare -A val_map=()
+    declare var_name
+    declare val_set
+    thud_assert '[[ $script_type == @(pre|post) ]]'
+    thud_assert 'acid_git_branch_exists "$repo_str" "$branch_name"'
+    thud_arr_parse val_map <<<"$val_map_str"
+    {
+        printf 'cd %q\n' "${repo[git_dir]}"
+        printf 'branch=%q\n' "$branch_name"
+        for var_name in "${!val_map[@]}"; do
+            val_set="${val_map[$var_name]}"
+            thud_assert 'acid_set_is_exact "$val_set"'
+            # Exact set is assumed to be a valid array initializer
+            printf 'declare -a var_%s=(%s)\n' "$var_name" "$val_set"
+        done
+        printf 'commit=%q\n' "$commit_hash"
+        printf '%s\n%s\n%s\n' "${repo[script_pfx]}" \
+                              "${repo[${script_type}_script]}" \
+                              "${repo[script_sfx]}"
+    } | bash
+}
+
 # (Attempt to) handle a reference update, triggering a build for each new
 # commit. GIT_DIR or current directory should be the repository receiving the
 # reference update.
@@ -237,6 +269,9 @@ function acid_repo_ref_update()
     declare -A var
     declare var_selected
     declare -A val_map=()
+    declare val_map_str
+    declare each
+    declare rev
 
     thud_assert 'thud_is_bool "$act"'
 
@@ -329,7 +364,15 @@ function acid_repo_ref_update()
             fi
         fi
         val_map[$var_name]="$var_selected"
+        if acid_var_is_scope "$var_str"; then
+            if acid_set_intersects "${var[each]}" "$var_selected"; then
+                each=true
+            else
+                each=false
+            fi
+        fi
     done
+    val_map_str=`thud_arr_print val_map`
 
     # If not asked to act
     if ! "$act"; then
@@ -337,6 +380,20 @@ function acid_repo_ref_update()
     fi
 
     # TODO Output selected values
+
+    #
+    # Run the script
+    #
+    while read -r rev; do
+        git push --quiet "${repo[git_dir]}" "$rev:refs/pre/$rev"
+        acid_repo_run "$repo_str" "pre" "$ref_branch" "$val_map_str" "$rev"
+    done < <(
+        if "$each"; then
+            git rev-list --reverse "^$rev_old" "$rev_new"
+        else
+            git rev-list -n1 "^$rev_old" "$rev_new"
+        fi
+    )
 }
 
 fi # _ACID_REPO_SH
