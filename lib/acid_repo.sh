@@ -211,7 +211,6 @@ function acid_repo_load()
 
 # (Attempt to) handle a reference update.
 # Args: repo_str act rev_old rev_new ref
-# Output: error messages, if any
 function acid_repo_ref_update()
 {
     eval "$ACID_REPO_SHIFT"
