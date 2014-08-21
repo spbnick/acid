@@ -36,8 +36,7 @@ function acid_git_load()
 {
     declare -r dir="$1";        shift
     declare -r conf_pfx="$1";   shift
-    git rev-parse --resolve-git-dir "$dir" >/dev/null ||
-        thud_abort "Not a git directory: $dir"
+    thud_assert 'acid_is_git_dir "$dir"'
     declare -A git=(
         [git_dir]="`readlink -f \"\$dir\"`"
         [git_conf_pfx]="$conf_pfx"

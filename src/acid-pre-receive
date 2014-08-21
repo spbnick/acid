@@ -18,6 +18,7 @@
 
 . <(acid-strict-env || echo exit 1)
 . acid_repo.sh
+. acid_misc.sh
 
 declare -r PROGNAME=`basename "$0"`
 
@@ -39,11 +40,11 @@ if [ "$#" != 1 ]; then
     exit 1
 fi
 
-declare master_git_dir
-master_git_dir=`readlink -f "$1"`
-
-# Check master git dir is a repository
-git rev-parse --resolve-git-dir "$master_git_dir" >/dev/null
+declare master_git_dir=`readlink -f "$1"`
+acid_is_git_dir "$master_git_dir" || {
+    echo "Not a git dir: $master_git_dir"
+    exit 1
+}
 
 # Load repository
 declare repo_str

@@ -17,6 +17,7 @@
 # Boston, MA 02110-1301, USA.
 
 . <(acid-strict-env || echo exit 1)
+. acid_misc.sh
 
 declare -r PROGNAME=`basename "$0"`
 
@@ -38,8 +39,12 @@ if [ "$#" != 1 ]; then
     exit 1
 fi
 
-declare git_dir
-git_dir=`readlink -f "$1"`
+declare git_dir=`readlink -f "$1"`
+acid_is_git_dir "$git_dir" || {
+    echo "Not a git dir: $git_dir"
+    exit 1
+}
+
 declare tmp_git_dir
 tmp_git_dir=`mktemp --tmpdir --directory "$PROGNAME.XXXXXXXX"`
 trap 'rm -R "$tmp_git_dir"' EXIT

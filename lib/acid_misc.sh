@@ -20,6 +20,15 @@
 if [ -z "${_ACID_MISC_SH+set}" ]; then
 declare -r _ACID_MISC_SH=
 
+# Check if a directory is a git repository,
+# i.e. can be used as a GIT_DIR value.
+# Args: dir
+function acid_is_git_dir()
+{
+    declare -r dir="$1"
+    GIT_DIR="$dir" git rev-parse --resolve-git-dir="$dir" >&/dev/null
+}
+
 # Escape a string to use literally in a regular expression.
 # Args: str
 function acid_regexp_escape()

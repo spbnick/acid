@@ -21,11 +21,14 @@
 
 . <(acid-strict-env || echo exit 1)
 . acid_repo.sh
+. acid_misc.sh
 
 declare -r PROGNAME=`basename "$0"`
-declare git_dir=${1-${GIT_DIR-.}}
-git_dir=`readlink -f "$git_dir"`
-GIT_DIR="$git_dir" git rev-parse --git-dir >/dev/null
+declare git_dir=`readlink -f "${1-${GIT_DIR-.}}"`
+acid_is_git_dir "$git_dir" || {
+    echo "Not a git dir: $git_dir"
+    exit 1
+}
 declare repo_str
 repo_str=`acid_repo_load "$git_dir"` || {
     echo "Failed to load repository configuration" >&2
