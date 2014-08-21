@@ -30,6 +30,9 @@ declare _ACID_STRICT_SH=
 set -e
 . thud_strict.sh
 thud_strict_on
+. thud_misc.sh
+
+THUD_ABORT_PID=$$
 
 fi #_ACID_STRICT_SH
 EOF
