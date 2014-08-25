@@ -24,21 +24,21 @@ configuration.
 Triggering a pre-commit build for every commit designated for the master
 branch might look like this:
 
-    git push ci HEAD:refs/for/master,each
+    git push ci HEAD:master,each
 
 Having a variable specifying distributions to build on, can allow selecting
 them when pushing:
 
-    git push ci HEAD:refs/for/master,debian,rhel,fedora
+    git push ci HEAD:master,debian,rhel,fedora
 
 Or with selecting the commits to build:
 
-    git push ci HEAD:refs/for/master,each,gentoo,arch
+    git push ci HEAD:master,each,gentoo,arch
 
 Full tags need not be specified in the reference names, prefixes are
 sufficient. Assuming there is no ambiguity, the above can be abbreviated to:
 
-    git push ci HEAD:refs/for/master,e,g,a
+    git push ci HEAD:master,e,g,a
 
 Each branch configuration must specify three tag set "masks": one selecting
 tags available for specifying in the pre-commit push reference names, another
