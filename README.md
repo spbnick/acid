@@ -74,3 +74,79 @@ triggered builds.
 
 After `git-receive-pack` completes, `acid-receive-pack` regains control and
 removes the temporary clone of the mirror repo.
+
+Options
+-------
+
+ACID retrieves its configuration from the mirror's git configuration. The
+following is the reference to the supported options.
+
+acid
+> General ACID configuration.
+
+acid.script-pfx
+> Prefix to be added to commit-handling script before execution. Can be used
+> to add variable and function definitions common to both pre- and post-commit
+> trigger scripts. Optional.
+
+acid.script-sfx
+> Suffix to be added to commit-handling script before execution. Can be used
+> to add cleanup common to both pre- and post-commit trigger scripts.
+> Optional.
+
+acid-pre
+> Pre-review commit handling configuration.
+
+acid-pre.script
+> Script to execute upon detection of a pre-review commit (pre-commit
+> trigger), i.e. on push to the mirror. Will have `acid.script-pfx` and
+> `acid.script-sfx` added to the front and the back correspondingly, before
+> execution. Optional.
+
+acid-post
+> Post-review commit handling configuration.
+
+acid-post.script
+> Script to execute upon detection of a post-review commit (pre-commit
+> trigger), i.e. upon noticing new origin commits when refreshing the mirror.
+> Will have `acid.script-pfx` and `acid.script-sfx` added to the front and the
+> back correspondingly, before execution. Optional.
+
+acid-var.\*
+> ACID variable definitions. Name of the section determines variable name.
+
+acid-var.\*.type
+> Variable type, either one of these:
+>
+> - inclusive - array value, one tag minimum, all tags maximum;
+> - exclusive - scalar value, always one tag;
+> - scope - scalar value specifying which commits to run triggers for (each,
+>           or only the last), always one of two tags.
+>
+> Required.
+
+acid-var.\*.desc
+> Variable description, used in online help. Optional.
+
+acid-var.\*.tag
+> Variable value tag. First word is the tag name, remainder is the optional
+> tag description used in online help. Option is repeated for each tag.
+
+branch.\*.acid-enabled
+> Boolean option enabling ACID handling of the branch. Optional.
+
+branch.\*.acid-pre-selected
+> A space-separated set of glob patterns matching tags available for
+> selection via target reference names, when pushing pre-review commits.
+> Required, if acid-enabled is true.
+
+branch.\*.acid-pre-defaults
+> A space-separated set of glob patterns matching tags to be used as
+> defaults when a variable doesn't have any of its tags specified in the
+> target reference name, when pushing pre-review commits. Should not match
+> ambiguous tag sets. Required, if acid-enabled is true.
+
+branch.\*.acid-post-selected
+> A space-separated set of glob patterns matching tags to use as variable
+> values for handling post-review commits. Should not match ambiguous tag
+> sets. Required, if acid-enabled is true.
