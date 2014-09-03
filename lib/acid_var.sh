@@ -44,6 +44,7 @@ function acid_var_load()
     thud_arr_parse var <<<"$git_str"
     declare -A map=()
     declare tag_var
+    declare set
     declare tag
     declare desc
 
@@ -57,6 +58,11 @@ function acid_var_load()
                 echo "Not an exact tag: $tag" >&2
                 return 1
             fi
+            if [[ -n ${map[$tag]+set} ]]; then
+                echo "Duplicate tag: $tag" >&2
+                return 1
+            fi
+            set+=" $tag"
             map[$tag]="${desc:-$tag}"
         done < <(acid_git_conf_get_all_zero "$git_str" tag)
     elif [[ ${var[type]} == scope ]]; then
@@ -67,7 +73,12 @@ function acid_var_load()
                 echo "Not an exact tag: $tag" >&2
                 return 1
             fi
+            if [[ -n ${map[$tag]+set} ]]; then
+                echo "Duplicate tag: $tag" >&2
+                return 1
+            fi
             var[$tag_var]="$tag"
+            set+=" $tag"
             map[$tag]="${desc:-$tag}"
         done
     elif [[ -n "${var[type]}" ]]; then
@@ -78,7 +89,7 @@ function acid_var_load()
         return 1
     fi
     var[map_str]=`thud_arr_print map`
-    var[set]=`acid_set_from_aarr map`
+    var[set]="$set"
     thud_assert 'acid_set_is_exact "${var[set]}"'
 
     thud_arr_print var
