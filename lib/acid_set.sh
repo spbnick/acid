@@ -91,7 +91,7 @@ function acid_set_to_iarr()
     declare -r _set="$1";       shift
     thud_assert 'thud_is_idx_arr "$_iarr_var"'
     thud_assert 'acid_set_is_valid "$_set"'
-    IFS="$ACID_SET_IFS" read -r -d '' -a "$_iarr_var" <<<"$_set"
+    IFS="$ACID_SET_IFS" read -r -d '' -a "$_iarr_var" <<<"$_set" || true
 }
 
 # Convert a set string to an associative array, with tags having '*' and '@'
@@ -108,7 +108,7 @@ function acid_set_to_aarr()
     thud_assert 'acid_set_is_valid "$_set"'
     _esc_set=${_set//\*/**}
     _esc_set=${_esc_set//@/@@}
-    IFS="$ACID_SET_IFS" read -r -d '' -a _iarr <<<"$_esc_set"
+    IFS="$ACID_SET_IFS" read -r -d '' -a _iarr <<<"$_esc_set" || true
     if [[ ${#_iarr[@]} == 0 ]]; then
         _init_expr=""
     else
