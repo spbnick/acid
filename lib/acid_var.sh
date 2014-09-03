@@ -88,7 +88,7 @@ function acid_var_load()
         echo "Variable type not specified" >&2
         return 1
     fi
-    var[map_str]=`thud_arr_print map`
+    var[map]=`thud_arr_print map`
     var[set]="$set"
     thud_assert 'acid_set_is_exact "${var[set]}"'
 
