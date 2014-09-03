@@ -63,7 +63,7 @@ function acid_var_load()
                 return 1
             fi
             set+=" $tag"
-            map[$tag]="${desc:-$tag}"
+            map[$tag]="$desc"
         done < <(acid_git_conf_get_all_zero "$git_str" tag)
     elif [[ ${var[type]} == scope ]]; then
         for tag_var in each last; do
@@ -79,7 +79,7 @@ function acid_var_load()
             fi
             var[$tag_var]="$tag"
             set+=" $tag"
-            map[$tag]="${desc:-$tag}"
+            map[$tag]="$desc"
         done
     elif [[ -n "${var[type]}" ]]; then
         echo "Unknown variable type: ${var[type]}" >&2
