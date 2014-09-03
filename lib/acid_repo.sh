@@ -276,7 +276,7 @@ function acid_repo_ref_update()
     thud_assert 'thud_is_bool "$act"'
 
     if [[ "$rev_new" =~ ^0{40}$ ]]; then
-        echo "Reference removal is not supported: $ref"
+        echo "Reference removal is not supported: $ref" >&2
         return 1
     fi
 
@@ -285,25 +285,25 @@ function acid_repo_ref_update()
     #
     ref_dest_raw=${ref%%,*}
     ref_dest=`git check-ref-format --normalize "$ref_dest_raw"` || {
-        echo "Invalid destination: $ref_dest_raw"
+        echo "Invalid destination: $ref_dest_raw" >&2
         return 1
     }
     if [[ $ref_dest =~ ^refs/heads/([^/]+)$ ]]; then
         ref_branch=${BASH_REMATCH[1]}
     else
-        echo "Pushing to a non-branch reference: $ref_dest"
+        echo "Pushing to a non-branch reference: $ref_dest" >&2
         return 1
     fi
 
     if ! acid_git_branch_exists "$repo_str" "$ref_branch"; then
-        echo "Destination branch doesn't exist: $ref_branch"
+        echo "Destination branch doesn't exist: $ref_branch" >&2
         return 1
     fi
 
     thud_arr_parse branch_map <<<"${repo[branch_map]}"
     branch_str="${branch_map[$ref_branch]-}"
     if [[ -z "$branch_str" ]]; then
-        echo "Destination branch is not configured for CI: $ref_branch"
+        echo "Destination branch is not configured for CI: $ref_branch" >&2
         return 1
     fi
 
@@ -324,7 +324,7 @@ function acid_repo_ref_update()
         ref_pfx_list=${ref#*,}
         ref_set=${ref_pfx_list//,/ }
         if ! acid_set_is_exact "$ref_set"; then
-            echo "Invalid tag prefix list: $ref_pfx_list"
+            echo "Invalid tag prefix list: $ref_pfx_list" >&2
             return 1
         fi
         ref_set=`acid_set_to_pfx "$ref_set"`
