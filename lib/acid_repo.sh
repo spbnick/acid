@@ -241,6 +241,97 @@ function acid_repo_run()
     } | bash
 }
 
+# Output a reference name format usage message.
+# Args: repo_str
+function acid_repo_ref_usage()
+{
+    eval "$ACID_REPO_SHIFT"
+    declare -A var_map=()
+    declare -A branch_map=()
+    declare var_name
+    declare branch_name
+    declare -A var
+    declare tag
+    declare -A tag_map
+    declare -A branch
+    declare var_width=0
+    declare tag_width=0
+
+    thud_arr_parse var_map <<<"${repo[var_map]}"
+    thud_arr_parse branch_map <<<"${repo[branch_map]}"
+
+    thud_unindent <<<"\
+        Reference format:
+
+            [refs/heads/]BRANCH[,TAG_PREFIX...]
+
+            BRANCH      Target branch name.
+            TAG_PREFIX  String matching beginning of a variable tag.
+    "
+
+    # Find variable and tag field widths
+    for var_name in "${!var_map[@]}"; do
+        var=()
+        thud_arr_parse var <<<"${var_map[$var_name]}"
+        var_width=$((${#var_name} > var_width ? ${#var_name} : var_width))
+        for tag in ${var[set]}; do
+            tag_width=$((${#tag} > tag_width ? ${#tag} : tag_width))
+        done
+    done
+    var_width=$(((var_width + 4) & ~3 ))
+    tag_width=$(((tag_width + 4) & ~3 ))
+
+    # Output variables
+    printf "Variables:\\n\\n"
+    for var_name in "${!var_map[@]}"; do
+        var=()
+        thud_arr_parse var <<<"${var_map[$var_name]}"
+        tag_map=()
+        thud_arr_parse tag_map <<<"${var[map]}"
+        printf "    %${var[desc]:+-${var_width}}s%s\\n" \
+               "$var_name" "${var[desc]:+- ${var[desc]}}"
+        if acid_var_is_exclusive "${var_map[$var_name]}"; then
+            printf "    one of:\n"
+        else
+            printf "    one or more of:\n"
+        fi
+        for tag in ${var[set]}; do
+            printf "        %${tag_map[$tag]:+-${tag_width}}s%s\\n" \
+                   "$tag" "${tag_map[$tag]:+- ${tag_map[$tag]}}"
+        done
+        printf "\\n"
+    done
+
+    # Output branches
+    printf "Branches:\\n\\n"
+    for branch_name in "${!branch_map[@]}"; do
+        branch=()
+        thud_arr_parse branch <<<"${branch_map[$branch_name]}"
+        printf "    %s\\n" "$branch_name"
+
+        printf "        allowed:\\n"
+        for var_name in "${!var_map[@]}"; do
+            var=()
+            thud_arr_parse var <<<"${var_map[$var_name]}"
+            printf "            %-$((var_width + 4))s" \
+                   "$var_name:"
+            acid_set_intersect "${var[set]}" "${branch[pre_selected]}"
+            printf "\\n"
+        done
+
+        printf "        default:\\n"
+        for var_name in "${!var_map[@]}"; do
+            var=()
+            thud_arr_parse var <<<"${var_map[$var_name]}"
+            printf "            %-$((var_width + 4))s" \
+                   "$var_name:"
+            acid_set_intersect "${var[set]}" "${branch[pre_defaults]}"
+            printf "\\n"
+        done
+        printf "\\n"
+    done
+}
+
 # (Attempt to) handle a reference update, triggering a build for each new
 # commit. GIT_DIR or current directory should be the repository receiving the
 # reference update.
@@ -286,17 +377,20 @@ function acid_repo_ref_update()
     ref_dest_raw=${ref%%,*}
     ref_dest=`git check-ref-format --normalize "$ref_dest_raw"` || {
         echo "Invalid destination: $ref_dest_raw" >&2
+        acid_repo_ref_usage "$repo_str" >&2
         return 1
     }
     if [[ $ref_dest =~ ^refs/heads/([^/]+)$ ]]; then
         ref_branch=${BASH_REMATCH[1]}
     else
         echo "Pushing to a non-branch reference: $ref_dest" >&2
+        acid_repo_ref_usage "$repo_str" >&2
         return 1
     fi
 
     if ! acid_git_branch_exists "$repo_str" "$ref_branch"; then
         echo "Destination branch doesn't exist: $ref_branch" >&2
+        acid_repo_ref_usage "$repo_str" >&2
         return 1
     fi
 
@@ -304,6 +398,7 @@ function acid_repo_ref_update()
     branch_str="${branch_map[$ref_branch]-}"
     if [[ -z "$branch_str" ]]; then
         echo "Destination branch is not configured for CI: $ref_branch" >&2
+        acid_repo_ref_usage "$repo_str" >&2
         return 1
     fi
 
@@ -325,6 +420,7 @@ function acid_repo_ref_update()
         ref_set=${ref_pfx_list//,/ }
         if ! acid_set_is_exact "$ref_set"; then
             echo "Invalid tag prefix list: $ref_pfx_list" >&2
+            acid_repo_ref_usage "$repo_str" >&2
             return 1
         fi
         ref_set=`acid_set_to_pfx "$ref_set"`
@@ -336,7 +432,7 @@ function acid_repo_ref_update()
     if ! acid_set_is_empty "$set"; then
         set=`acid_set_from_pfx "$set"`
         echo "Some tag prefixes don't match any allowed tags: $set" >&2
-        # TODO Output allowed tags with instructions
+        acid_repo_ref_usage "$repo_str" >&2
         return 1
     fi
 
@@ -360,6 +456,7 @@ function acid_repo_ref_update()
                ! acid_set_is_singleton "$var_selected"; then
                 echo "Specified tag prefixes match ambigous" \
                      "\"$var_name\" tag set: $var_selected" >&2
+                acid_repo_ref_usage "$repo_str" >&2
                 return 1
             fi
         fi
