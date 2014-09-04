@@ -164,6 +164,10 @@ function acid_set_filter()
     declare -a iarr=()
     declare sep=''
     declare tag
+    thud_assert 'acid_set_is_valid "$set"'
+    if acid_set_is_empty "$set"; then
+        return 0
+    fi
     acid_set_to_iarr iarr "$set"
     for tag in "${iarr[@]}"; do
         if ! "$@" "$tag"; then
@@ -185,6 +189,12 @@ function acid_set_is_subset()
     declare any_tag
     thud_assert 'acid_set_is_exact "$exact_set"'
     thud_assert 'acid_set_is_valid "$any_set"'
+    if acid_set_is_empty "$exact_set"; then
+        return 0
+    fi
+    if acid_set_is_empty "$any_set"; then
+        return 1
+    fi
     acid_set_to_iarr exact_iarr "$exact_set"
     acid_set_to_iarr any_iarr "$any_set"
     for exact_tag in "${!exact_iarr[@]}"; do
@@ -224,6 +234,11 @@ function acid_set_comp()
     declare any_tag
     thud_assert 'acid_set_is_exact "$exact_set"'
     thud_assert 'acid_set_is_valid "$any_set"'
+    if acid_set_is_empty "$exact_set" ||
+       acid_set_is_empty "$any_set"; then
+        printf '%s' "$exact_set"
+        return 0
+    fi
     acid_set_to_aarr exact_aarr "$exact_set"
     acid_set_to_aarr any_aarr "$any_set"
     for exact_tag in "${!exact_aarr[@]}"; do
@@ -252,6 +267,10 @@ function acid_set_intersect()
     declare any_tag
     thud_assert 'acid_set_is_exact "$exact_set"'
     thud_assert 'acid_set_is_valid "$any_set"'
+    if acid_set_is_empty "$exact_set" ||
+       acid_set_is_empty "$any_set"; then
+        return 0
+    fi
     acid_set_to_aarr exact_aarr "$exact_set"
     acid_set_to_aarr any_aarr "$any_set"
     for exact_tag in "${!exact_aarr[@]}"; do
@@ -278,6 +297,10 @@ function acid_set_intersects()
     declare any_tag
     thud_assert 'acid_set_is_exact "$exact_set"'
     thud_assert 'acid_set_is_valid "$any_set"'
+    if acid_set_is_empty "$exact_set" ||
+       acid_set_is_empty "$any_set"; then
+        return 1
+    fi
     acid_set_to_iarr exact_iarr "$exact_set"
     acid_set_to_iarr any_iarr "$any_set"
     for any_tag in "${any_iarr[@]}"; do
@@ -305,6 +328,10 @@ function acid_set_hit()
     declare exact_tag
     thud_assert 'acid_set_is_valid "$any_set"'
     thud_assert 'acid_set_is_exact "$exact_set"'
+    if acid_set_is_empty "$any_set" ||
+       acid_set_is_empty "$exact_set"; then
+        return 0
+    fi
     acid_set_to_aarr any_aarr "$any_set"
     acid_set_to_aarr exact_aarr "$exact_set"
     for any_key in "${!any_aarr[@]}"; do
@@ -333,6 +360,11 @@ function acid_set_miss()
     declare exact_tag
     thud_assert 'acid_set_is_valid "$any_set"'
     thud_assert 'acid_set_is_exact "$exact_set"'
+    if acid_set_is_empty "$any_set" ||
+       acid_set_is_empty "$exact_set"; then
+        printf '%s' "$any_set"
+        return 0
+    fi
     acid_set_to_aarr any_aarr "$any_set"
     acid_set_to_aarr exact_aarr "$exact_set"
     for any_key in "${!any_aarr[@]}"; do
@@ -357,6 +389,9 @@ function acid_set_to_pfx()
     declare -a pfx_iarr=()
     declare tag
     thud_assert 'acid_set_is_exact "$exact_set"'
+    if acid_set_is_empty "$exact_set"; then
+        return 0
+    fi
     acid_set_to_iarr exact_iarr "$exact_set"
     for tag in "${exact_iarr[@]}"; do
         pfx_iarr+=("$tag*")
