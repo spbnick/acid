@@ -150,3 +150,73 @@ branch.\*.acid-post-selected
 > A space-separated set of glob patterns matching tags to use as variable
 > values for handling post-review commits. Should not match ambiguous tag
 > sets. Required, if acid-enabled is true.
+
+Scripts
+-------
+
+Both pre- and post-review commit-handling scripts receive the same
+environment. They are executed in the mirror repo's `GIT_DIR`, have `branch`
+variable set to the name of the target branch and `commit` variable set to the
+commit hash.
+
+ACID variable values are stored in similarly-named indexed array variables,
+but having `var_` prefix attached. I.e. selected ACID variable tags become
+array elements.
+
+Example
+-------
+
+The following Git config snippet was used by the sssd project to trigger
+Jenkins CI jobs.
+
+    [branch "master"]
+        remote = origin
+        merge = refs/heads/master
+        acid-enabled = true
+        acid-pre-selected = *
+        acid-pre-defaults = debian* rhel* fedora* last essential
+        acid-post-selected = debian* rhel* fedora* each rigorous
+
+    [acid]
+        script-pfx = " \
+            set -e -u -o pipefail; \
+            function queue() { \
+                declare -r localpart=\"$1\"; \
+                declare desc; \
+                declare url=\"http://localhost:8080/job/ci/buildWithParameters?\"; \
+                desc=`git log -n1 --oneline \"$commit\"`; \
+                echo \"Queueing for $var_tests / ${var_distro[*]}:\" >&2; \
+                echo \"         $desc\" >&2; \
+                echo >&2; \
+                url+=\"delay=0sec&revision=$commit&tests=$var_tests&\"; \
+                url+=\"labels=${var_distro[*]}&email=$localpart@redhat.com\"; \
+                wget --quiet -O/dev/null -- \"$url\" >&2; \
+            }; \
+        "
+
+    [acid-pre]
+        script = "queue \"$USER\""
+    [acid-post]
+        script = "queue sssd-ci"
+
+    [acid-var "tests"]
+        desc = test set to execute
+        type = exclusive
+        tag = essential         8m, build, test with Valgrind
+        tag = moderate          15m, essential, distcheck, mock
+        tag = rigorous          25m, moderate, clang analyzer, code coverage
+
+    [acid-var "distro"]
+        desc = distribution to run on
+        type = inclusive
+        tag = debian_testing    Debian Testing
+        tag = fedora20          Fedora 20
+        tag = fedora_rawhide    Fedora Rawhide
+        tag = rhel6             RHEL6
+        tag = rhel7             RHEL7
+
+    [acid-var "scope"]
+        desc = which commits to test
+        type = scope
+        each = each     each commit
+        last = last     only the last commit
