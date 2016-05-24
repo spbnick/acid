@@ -44,11 +44,11 @@ function acid_repo_load()
     declare -A var_map=()
     declare var_name
     declare var_str
-    declare -A var
+    declare -A var=()
     declare set
     declare -A branch_map=()
     declare branch_str
-    declare -A branch
+    declare -A branch=()
     declare var_selected
     declare var_defaults
     repo+=(
@@ -250,10 +250,10 @@ function acid_repo_ref_usage()
     declare -A branch_map=()
     declare var_name
     declare branch_name
-    declare -A var
+    declare -A var=()
     declare tag
-    declare -A tag_map
-    declare -A branch
+    declare -A tag_map=()
+    declare -A branch=()
     declare var_width=0
     declare tag_width=0
 
@@ -357,7 +357,7 @@ function acid_repo_ref_update()
     declare -A var_map=()
     declare var_name
     declare var_str
-    declare -A var
+    declare -A var=()
     declare var_selected
     declare -A val_map=()
     declare val_map_str
@@ -500,13 +500,13 @@ function acid_repo_branch_update_all()
 {
     eval "$ACID_REPO_SHIFT";
     declare -A branch_map=()
-    declare -A branch
+    declare -A branch=()
     declare branch_name
     declare ref
     declare -A var_map=()
     declare var_name
-    declare -A var
-    declare -A val_map
+    declare -A var=()
+    declare -A val_map=()
     declare selected
     declare each
     thud_arr_parse branch_map <<<"${repo[branch_map]}"
